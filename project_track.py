@@ -1,10 +1,10 @@
-##################################################
+"""
 #########  Raspberry - Arduino setup  ############
-##################################################
+"""
 from nanpy import (ArduinoApi, SerialManager)
 from time import sleep
+from datetime import datetime
 
-# Make connection
 try:
     connectMain = SerialManager(device='/dev/ttyACM1')
     m = ArduinoApi(connection=connectMain)
@@ -17,18 +17,15 @@ try:
 except:
     print("Laser connection failed!")
 
-##################################################
-##############  Main arduino code  ###############
-##################################################
-
+"""
+##############  Main Arduino code  ###############
+"""
 valveDelay = 70
 reward = False
-
 sensor = [2, 3, 4, 5, 6, 7, 8, 9]
 rewardPort = ['A0', 'A1', 'A2', 'A3']
 idSensor = 0
-isValve = 0
-state = 1 # 0: idle, 1: task
+idValve = 0
 nTrial = 0
 totalTrial = 90
 
@@ -37,42 +34,59 @@ for index in range(0, 8):
 for index in range(0, 4):
     m.pinMode(rewardPort[index], m.OUTPUT)
 
-def readSensor():
-    tmp_out = 0
-    mod_out = 0
-    qout_out = 0
 
-    sleep(0.001)
+def valve_open(index_valve):
+    """
+    #################  Valve Open  ###################
+    """
+    m.digitalWrite(rewardPort(index_valve, m.HIGH))
+    sleep(valveDelay)
+    m.digitalWrite(rewardPort(index_valve, m.LOW))
+    reward = True
 
-# pinMode Setup
+
+def print_sensor(id_sensor):
+    """
+    ############  Print Sensor & Valve  ##############
+    """
+    timeEpoch = datetime.utcnow()
+    timeEpoch.second
+    print(timeEpoch, '\t', id_sensor, '\n')
 
 
+def print_valve(id_valve):
+    timeEpoch = datetime.utcnow()
+    timeEpoch.second
+    print(timeEpoch, '\t', id_valve, '\n')
 
-# pinMode
-ledPin = 7
-buttonPin = 8
-ledState = False
-buttonState = 0
 
-# Setup the pinModes
-m.pinMode(ledPin, m.OUTPUT)
-m.pinMode(buttonPin, m.INPUT)
-
-# Main
-try:
+def read_sensor(id_sensor, n_trial):
+    """
+    #################  Read sensor  ##################
+    """
+    [tmp_out, mod_out, quot_out] = 0
     while True:
-        buttonState = m.digitalRead(buttonPin)
-        print("Our button state is: {}".format(buttonState))
-        if buttonState:
-            if ledState:
-                m.digitalWrite(ledPin,m.LOW)
-                ledState = False
-                print("LED OFF")
-                sleep(1)
-            else:
-                m.digitalWrite(ledPin,m.HIGH)
-                ledState = True
-                print("LED ON")
-                sleep(1)
-except:
-    m.digitalWrite(ledPin,m.LOW)
+        sleep(0.001)
+        tmp_out = m.digitalRead(sensor(id_sensor))
+        if tmp_out == 1:
+            print_sensor()
+            mod_out = id_sensor % 2
+            quot_out = id_sensor / 2
+            id_sensor = id_sensor + 1
+            if mod_out == 0:
+                valve_open(quot_out)
+            if id_sensor == 8:
+                id_sensor = 0
+                n_trial = n_trial + 1
+            break
+
+
+def mainloop():
+    """
+    #################  Main function  ##################
+    """
+    state = 1  # 0: idle, 1: task
+    if state:
+        read_sensor()
+        if nTrial == totalTrial:
+            state = 0
