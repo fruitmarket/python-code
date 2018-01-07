@@ -38,6 +38,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.valve1 = QtWidgets.QCheckBox(self.horizontalLayoutWidget)
+        self.valve1.setEnabled(True)
+        self.valve1.setAcceptDrops(False)
         self.valve1.setObjectName("valve1")
         self.horizontalLayout.addWidget(self.valve1)
         self.valve2 = QtWidgets.QCheckBox(self.horizontalLayoutWidget)
@@ -67,11 +69,8 @@ class Ui_MainWindow(object):
         self.groupBox_9.setObjectName("groupBox_9")
         self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.groupBox_9)
         self.verticalLayout_8.setObjectName("verticalLayout_8")
-# total trial
         self.trial_total = QtWidgets.QSpinBox(self.groupBox_9)
         self.trial_total.setObjectName("trial_total")
-        self.trial_total.clicked.connect(self.clicked_trial_total)
-
         self.verticalLayout_8.addWidget(self.trial_total)
         self.horizontalLayout_2.addWidget(self.groupBox_9)
         self.groupBox_7 = QtWidgets.QGroupBox(self.horizontalLayoutWidget_2)
@@ -129,8 +128,6 @@ class Ui_MainWindow(object):
         self.laser_hightime = QtWidgets.QSpinBox(self.groupBox_2)
         self.laser_hightime.setObjectName("laser_hightime")
         self.verticalLayout.addWidget(self.laser_hightime)
-        self.laser_hightime.clicked.connect(self.clicked_laser_hightime)
-
         self.verticalLayout_10.addWidget(self.groupBox_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.groupBox_11)
         self.groupBox_3.setTitle("")
@@ -218,65 +215,6 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 
-def stop_clicked(self):
-    state = 0
-    return state
-
-
-def start_clicked(self, total_trial):
-    state = 1
-    if state:
-        read_sensor()
-        if nTrial == total_trial:
-            state = 0
-
-
-def clicked_trial_total(self):
-    total_trial = float(self.trial_total.txt())
-    return total_trial
-
-
-def clicked_laser_hightime(self):
-    hightime = float(self.laser_hightime.txt())
-    return hightime
-
-
-def clicked_laser_lowtime(self):
-    lowtime = float(self.laser_lowtime.txt())
-    return lowtime
-
-
-def clicked_laser_on(self):
-    sensor_on = float(self.laser_on.txt())
-    return sensor_on
-
-
-def clicked_laser_off(self):
-    sensor_off = float(self.laser_off.txt())
-    return sensor_off
-
-
-def clicked_valve1(self):
-    valve_1 = 'A0'
-    return valve_1
-
-
-def clicked_valve(self):
-    valve_2 = 'A1'
-    return valve_2
-
-
-def clicked_valve(self):
-    valve_3 = 'A2'
-    return valve_3
-
-
-def clicked_valve(self):
-    valve_4 = 'A3'
-    return valve_4
-
-
-
 
 """
 #########  Raspberry - Arduino setup  ############
@@ -300,15 +238,14 @@ except:
 """
 ##############  Main Arduino code  ###############
 """
-
-# totalTrial = 90
 valveDelay = 70
 reward = False
 sensor = [2, 3, 4, 5, 6, 7, 8, 9]
 rewardPort = ['A0', 'A1', 'A2', 'A3']
-idSensor = 1
-idValve = 1
+idSensor = 0
+idValve = 0
 nTrial = 0
+totalTrial = 90
 
 for index in range(0, 8):
     m.pinMode(sensor[index], m.INPUT)
@@ -341,15 +278,11 @@ def print_valve(id_valve):
     print(timeEpoch, '\t', id_valve, '\n')
 
 
-def read_sensor():
+def read_sensor(id_sensor, n_trial):
     """
     #################  Read sensor  ##################
     """
     [tmp_out, mod_out, quot_out] = 0
-    global id_sensor
-    global n_trial
-    global id_valve
-
     while True:
         sleep(0.001)
         tmp_out = m.digitalRead(sensor(id_sensor))
@@ -359,22 +292,32 @@ def read_sensor():
             quot_out = id_sensor / 2
             id_sensor = id_sensor + 1
             if mod_out == 0:
-                print_valve(id_valve)
                 valve_open(quot_out)
-                id_valve = id_valve
             if id_sensor == 8:
                 id_sensor = 0
-                id_valve = 0
                 n_trial = n_trial + 1
             break
 
 
-def mainloop(total_trial):
+def mainloop():
     """
     #################  Main function  ##################
     """
     state = 1  # 0: idle, 1: task
     if state:
         read_sensor()
-        if nTrial == total_trial:
+        if nTrial == totalTrial:
+            state = 0
+
+def stop_clicked(self):
+    state = 0
+    return state
+
+def start_clicked(self):
+    state = 1
+    if state:
+        read_sensor()
+        if nTrial == totalTrial:
+            state = 0
+        if stop_clicked(self)
             state = 0
