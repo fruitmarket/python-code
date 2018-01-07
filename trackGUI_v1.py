@@ -67,11 +67,9 @@ class Ui_MainWindow(object):
         self.groupBox_9.setObjectName("groupBox_9")
         self.verticalLayout_8 = QtWidgets.QVBoxLayout(self.groupBox_9)
         self.verticalLayout_8.setObjectName("verticalLayout_8")
-# total trial
         self.trial_total = QtWidgets.QSpinBox(self.groupBox_9)
         self.trial_total.setObjectName("trial_total")
         self.trial_total.clicked.connect(self.clicked_trial_total)
-
         self.verticalLayout_8.addWidget(self.trial_total)
         self.horizontalLayout_2.addWidget(self.groupBox_9)
         self.groupBox_7 = QtWidgets.QGroupBox(self.horizontalLayoutWidget_2)
@@ -130,7 +128,6 @@ class Ui_MainWindow(object):
         self.laser_hightime.setObjectName("laser_hightime")
         self.verticalLayout.addWidget(self.laser_hightime)
         self.laser_hightime.clicked.connect(self.clicked_laser_hightime)
-
         self.verticalLayout_10.addWidget(self.groupBox_2)
         self.groupBox_3 = QtWidgets.QGroupBox(self.groupBox_11)
         self.groupBox_3.setTitle("")
@@ -218,6 +215,7 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 
+
 def stop_clicked(self):
     state = 0
     return state
@@ -274,8 +272,6 @@ def clicked_valve(self):
 def clicked_valve(self):
     valve_4 = 'A3'
     return valve_4
-
-
 
 
 """
