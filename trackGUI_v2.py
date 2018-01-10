@@ -6,7 +6,7 @@ from datetime import datetime
 # GUI import
 import sys
 from PyQt5.QtWidgets import QApplication
-from PyQt5 import uic
+from PyQt5 import uic, QtCore
 
 try:
     connectMain = SerialManager(device='/dev/ttyACM1')
@@ -22,7 +22,7 @@ except:
 
 
 # Parameter setup
-valveDelay = 70
+valveDelay = 70  # unit: (msec)
 sensor = [2, 3, 4, 5, 6, 7, 8, 9]
 rewardPort = ['A0', 'A1', 'A2', 'A3']
 idx_sensor = 1
@@ -124,9 +124,15 @@ class MyTrackGui(base_1, form_1):
         self.valve2.clicked.connect(self.clicked_valve2)
         self.valve3.clicked.connect(self.clicked_valve3)
         self.valve4.clicked.connect(self.clicked_valve4)
+        self.timer = QtCore.QTimer(self)
+        self.timer.timeout.connect(self.displayTime)
+        self.timer.start()
+        self.task_start.clicked.connect(self.clicked_task_start)
+        self.laser_state.setText(str('OFF'))
 
     def clicked_task_start(self):
         global state, trial_current, idx_sensor
+        self.laser_state.setText(str('IDLE'))
         trial_total = float(self.trial_total.text())
         time_high = float(self.laser_hightime.text())
         time_low = float(self.laser_lowtime.text())
@@ -137,8 +143,11 @@ class MyTrackGui(base_1, form_1):
         if state:
             read_sensor()
             if 30 <= trial_current < 60:
-                if sensor_on <= idx_sensor <= sensor_off:
-                    trigger_laser(time_high, time_low)
+                while True:
+                    self.laser_state.setText(str('ON'))
+                    if sensor_on <= idx_sensor <= sensor_off:
+                        trigger_laser(time_high, time_low)
+                    break
 
             if trial_current == trial_total:
                 state = 0
@@ -168,6 +177,9 @@ class MyTrackGui(base_1, form_1):
         global state_valve4
         state_valve4 = True
         return state_valve4
+
+    def displayTime(self):
+        self.label.setText(QtCore.QDateTime.currentDateTime().toString())
 
 
 if __name__ == '__main__':
