@@ -20,11 +20,6 @@ my_uifile = 'trackGUI.ui'
 form_1, base_1 = uic.loadUiType(my_uifile)
 
 
-def timerEvent():
-    global time
-    time = time.addSecs(1)
-
-
 class MyTrackGui(base_1, form_1):
     def __init__(self):
         super(base_1, self).__init__()
@@ -34,6 +29,7 @@ class MyTrackGui(base_1, form_1):
         state_valve4 = False
         self.setupUi(self)
         self.task_start.clicked.connect(self.clicked_task_start)
+        self.task_stop.clicked.connect(self.clicked_task_stop)
         self.valve1.clicked.connect(self.clicked_valve1)
         self.valve2.clicked.connect(self.clicked_valve2)
         self.valve3.clicked.connect(self.clicked_valve3)
@@ -41,7 +37,16 @@ class MyTrackGui(base_1, form_1):
         self.task_timer.setNumDigits(8)
         self.currentTime = QTime(0, 0, 0)
         self.task_timer.display(self.currentTime.toString("hh:mm:ss"))
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.updateLcdNumberContent)
         self.laser_state.setText(str('OFF'))
+        self.trial_total.setText('90')
+        # self.valve2.setChecked(True)
+        # self.valve4.setChecked(True)
+
+    def updateLcdNumberContent(self):
+        self.currentTime = self.currentTime.addSecs(1)
+        self.task_timer.display(self.currentTime.toString('hh:mm:ss'))
 
     def clicked_task_start(self):
         global state, trial_current, idx_sensor
@@ -52,8 +57,7 @@ class MyTrackGui(base_1, form_1):
         sensor_on = float(self.laser_on.text())
         sensor_off = float(self.laser_off.text())
 
-
-    # def currentTime(self):
+        self.timer.start(1000)
 
         # # main arduino code
         # if state:
@@ -72,6 +76,7 @@ class MyTrackGui(base_1, form_1):
     def clicked_task_stop(self):
         global state
         state = 0
+        self.timer.stop()
         return state
 
     def clicked_valve1(self):

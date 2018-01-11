@@ -26,9 +26,9 @@
    <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
-      <x>20</x>
+      <x>10</x>
       <y>10</y>
-      <width>391</width>
+      <width>401</width>
       <height>371</height>
      </rect>
     </property>
@@ -60,8 +60,8 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>130</y>
-       <width>361</width>
+       <y>120</y>
+       <width>381</width>
        <height>43</height>
       </rect>
      </property>
@@ -124,9 +124,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>200</y>
-       <width>361</width>
-       <height>65</height>
+       <y>184</y>
+       <width>381</width>
+       <height>81</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -140,9 +140,14 @@
           <rect>
            <x>10</x>
            <y>30</y>
-           <width>91</width>
-           <height>26</height>
+           <width>81</width>
+           <height>39</height>
           </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>20</pointsize>
+          </font>
          </property>
         </widget>
        </widget>
@@ -190,9 +195,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>290</y>
-       <width>362</width>
-       <height>71</height>
+       <y>280</y>
+       <width>381</width>
+       <height>81</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -236,11 +241,16 @@
         <widget class="QLineEdit" name="laser_state">
          <property name="geometry">
           <rect>
-           <x>10</x>
+           <x>30</x>
            <y>30</y>
            <width>71</width>
-           <height>31</height>
+           <height>39</height>
           </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>20</pointsize>
+          </font>
          </property>
         </widget>
        </widget>

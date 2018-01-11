@@ -7,6 +7,7 @@ from datetime import datetime
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5 import uic, QtCore
+from PyQt5.QtCore import QTime, QTimer
 
 try:
     connectMain = SerialManager(device='/dev/ttyACM1')
@@ -120,24 +121,37 @@ class MyTrackGui(base_1, form_1):
         state_valve4 = False
         self.setupUi(self)
         self.task_start.clicked.connect(self.clicked_task_start)
+        self.task_stop.clicked.connect(self.clicked_task_stop)
+        self.trial_total.setText('90')
+        # Connect valves
         self.valve1.clicked.connect(self.clicked_valve1)
         self.valve2.clicked.connect(self.clicked_valve2)
         self.valve3.clicked.connect(self.clicked_valve3)
         self.valve4.clicked.connect(self.clicked_valve4)
-        self.timer = QtCore.QTimer(self)
-        self.timer.timeout.connect(self.displayTime)
-        self.timer.start()
-        self.task_start.clicked.connect(self.clicked_task_start)
+        # self.valve2.setChecked(True)
+        # self.valve4.setChecked(True)
+        # Connect clock
+        self.task_timer.setNumDigits(8)
+        self.currentTime = QTime(0, 0, 0)
+        self.task_timer.display(self.currentTime.toString("hh:mm:ss"))
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.clock_tick)
+        # Connect laser state
         self.laser_state.setText(str('OFF'))
+
+    def clock_tick(self):
+        self.currentTime = self.currentTime.addSecs(1)
+        self.task_timer.display(self.currentTime.toString('hh:mm:ss'))
 
     def clicked_task_start(self):
         global state, trial_current, idx_sensor
-        self.laser_state.setText(str('IDLE'))
         trial_total = float(self.trial_total.text())
         time_high = float(self.laser_hightime.text())
         time_low = float(self.laser_lowtime.text())
         sensor_on = float(self.laser_on.text())
         sensor_off = float(self.laser_off.text())
+        self.laser_state.setText(str('IDLE'))
+        self.timer.start(1000)
 
 # main arduino code
         if state:
@@ -156,6 +170,7 @@ class MyTrackGui(base_1, form_1):
     def clicked_task_stop(self):
         global state
         state = 0
+        self.timer.stop()
         return state
 
     def clicked_valve1(self):
