@@ -5,9 +5,62 @@ from datetime import datetime
 
 # GUI import
 import sys
+from PyQt5 import QtGui, uic, QtCore, QtWidgets
 from PyQt5.QtWidgets import QApplication, QLCDNumber
-from PyQt5 import uic, QtCore
 from PyQt5.QtCore import QTime, QTimer
+import cv2
+import threading
+import queue
+
+running = False
+capture_thread = None
+q = queue.Queue()
+
+
+'''
+##############################################################
+###################  Web cam importing  ######################
+##############################################################
+'''
+
+
+def grab(cam, queue, width, height, fps):
+    global running
+    capture = cv2.VideoCapture(cam)
+    capture.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+    capture.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    capture.set(cv2.CAP_PROP_FPS, fps)
+
+    while (running):
+        frame = {}
+        capture.grab()
+        retval, img = capture.retrieve(0)
+        frame["img"] = img
+
+        if queue.qsize() < 10:
+            queue.put(frame)
+        else:
+            print
+            queue.qsize()
+
+
+class OwnImageWidget(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super(OwnImageWidget, self).__init__(parent)
+        self.image = None
+
+    def setImage(self, image):
+        self.image = image
+        sz = image.size()
+        self.setMinimumSize(sz)
+        self.update()
+
+    def paintEvent(self, event):
+        qp = QtGui.QPainter()
+        qp.begin(self)
+        if self.image:
+            qp.drawImage(QtCore.QPoint(0, 0), self.image)
+        qp.end()
 
 
 '''
@@ -16,7 +69,8 @@ from PyQt5.QtCore import QTime, QTimer
 ##############################################################
 '''
 # load ui file
-my_uifile = 'trackGUI.ui'
+# my_uifile = 'trackGUI.ui'
+my_uifile = 'D:\\Dropbox\\SNL\\raspberry\\trackGUI_wVideo.ui'
 form_1, base_1 = uic.loadUiType(my_uifile)
 
 
@@ -34,30 +88,70 @@ class MyTrackGui(base_1, form_1):
         self.valve2.clicked.connect(self.clicked_valve2)
         self.valve3.clicked.connect(self.clicked_valve3)
         self.valve4.clicked.connect(self.clicked_valve4)
-        self.task_timer.setNumDigits(8)
+        self.task_timer.setNumDigits(6)
         self.currentTime = QTime(0, 0, 0)
-        self.task_timer.display(self.currentTime.toString("hh:mm:ss"))
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.updateLcdNumberContent)
+        self.task_timer.display(self.currentTime.toString("mm:ss"))
+        self.timer_clock = QTimer(self)
+        self.timer_clock.timeout.connect(self.updateLcdNumberContent)
         self.laser_state.setText(str('OFF'))
         self.trial_total.setText('90')
+    # Video
+        self.timer_video = QTimer(self)
+        self.timer_video.timeout.connect(self.update_frame)
+        self.window_video = OwnImageWidget(self.window_video)
+        self.window_width = self.window_video.frameSize().width()
+        self.window_height = self.window_video.frameSize().height()
+
         # self.valve2.setChecked(True)
         # self.valve4.setChecked(True)
 
     def updateLcdNumberContent(self):
         self.currentTime = self.currentTime.addSecs(1)
-        self.task_timer.display(self.currentTime.toString('hh:mm:ss'))
+        self.task_timer.display(self.currentTime.toString('mm:ss'))
+
+    def update_frame(self):
+
+        if not q.empty():
+            frame = q.get()
+            img = frame["img"]
+
+            img_height, img_width, img_colors = img.shape
+            # scale_w = float(self.window_width) / float(img_width)
+            # scale_h = float(self.window_height) / float(img_height)
+            scale_w = 240 / float(img_width)
+            scale_h = 141 / float(img_height)
+            scale = min([scale_w, scale_h])
+
+            if scale == 0:
+                scale = 1
+
+            img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            height, width, bpc = img.shape
+            bpl = bpc * width
+            image = QtGui.QImage(img.data, width, height, bpl, QtGui.QImage.Format_RGB888)
+            self.window_video.setImage(image)
+
+    def closeEvent(self, event):
+        global running
+        running = False
 
     def clicked_task_start(self):
         global state, trial_current, idx_sensor
         self.laser_state.setText(str('IDLE'))
+
+        global running
+        running = True
+        capture_thread.start()
+
+        self.timer_clock.start(1000)
+        self.timer_video.start(1)
         trial_total = float(self.trial_total.text())
         time_high = float(self.laser_hightime.text())
         time_low = float(self.laser_lowtime.text())
         sensor_on = float(self.laser_on.text())
         sensor_off = float(self.laser_off.text())
 
-        self.timer.start(1000)
 
         # # main arduino code
         # if state:
@@ -76,7 +170,8 @@ class MyTrackGui(base_1, form_1):
     def clicked_task_stop(self):
         global state
         state = 0
-        self.timer.stop()
+        self.timer_clock.stop()
+        self.timer_video.stop()
         return state
 
     def clicked_valve1(self):
@@ -101,6 +196,7 @@ class MyTrackGui(base_1, form_1):
 
 
 if __name__ == '__main__':
+    capture_thread = threading.Thread(target=grab, args=(0, q, 1280, 720, 15))
     app = QApplication(sys.argv)
     ex = MyTrackGui()
     ex.show()
