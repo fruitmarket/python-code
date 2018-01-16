@@ -172,6 +172,7 @@ class MyTrackGui(base_1, form_1):
         state = 0
         self.timer_clock.stop()
         self.timer_video.stop()
+        self.laser_state.setText(str('OFF'))
         return state
 
     def clicked_valve1(self):
