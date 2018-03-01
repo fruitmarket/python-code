@@ -1,2 +1,2 @@
-for cycle in range(0,5):
-    execfile('testFile.py')
+for i in range(5):
+    exec(open('D:\\GitHub\\python-code\\testFile.py').read())
